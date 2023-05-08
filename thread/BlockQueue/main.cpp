@@ -1,4 +1,5 @@
 #include "BlockQueue.hpp"
+#include "task.hpp"
 #include <memory>
 #include <ctime>
 #include <cstdlib>
@@ -6,24 +7,27 @@
 
 void *producer(void *args)
 {
-    BlockQueue<int> *bq = static_cast<BlockQueue<int> *>(args);
+    BlockQueue<Task> *bq = static_cast<BlockQueue<Task> *>(args);
     while (true)
     {
-        int n = rand();
-        bq->push(n);
-        std::cout << "生产# " << n++ << std::endl;
+        int x = rand() % 10;
+        int y = rand() % 10;
+        char op = ops[rand() % 5];
+        Task t(x, y, op, mymath);
+        bq->push(t);
+        std::cout << "生产# " << t.toString() << std::endl;
     }
 }
 
 void *consumer(void *args)
 {
-    BlockQueue<int> *bq = static_cast<BlockQueue<int> *>(args);
+    BlockQueue<Task> *bq = static_cast<BlockQueue<Task> *>(args);
     while (true)
     {
         sleep(1);
-        int res = 0;
-        bq->pop(&res);
-        std::cout << "消费# " << res << std::endl;
+        Task t;
+        bq->pop(&t);
+        std::cout << "消费# " << t() << std::endl;
     }
 }
 
@@ -31,7 +35,7 @@ int main()
 {
     srand((unsigned int)time(nullptr));
     pthread_t p, c;
-    BlockQueue<int> *bq = new BlockQueue<int>();
+    BlockQueue<Task> *bq = new BlockQueue<Task>();
     pthread_create(&p, nullptr, producer, bq);
     pthread_create(&c, nullptr, consumer, bq);
     pthread_join(p, nullptr);
